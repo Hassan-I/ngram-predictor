@@ -21,9 +21,13 @@ class Normalizer:
         
 
     def strip_gutenberg(self):
-        sentences_to_remove = ["", ""]
-        self.text = self.text.replace(sentences_to_remove[0], "")
-        self.text = self.text.replace(sentences_to_remove[1], "")
+        # Remove everything before and including *** START OF ... ***
+        self.text = re.sub(r'^[\s\S]+?\*{3} START OF THE PROJECT GUTENBERG EBOOK[\s\S]+?\*{3}', '', self.text, count=1)
+
+        # Remove everything from and including *** END OF ... ***
+        self.text = re.sub(r'\*{3} END OF THE PROJECT GUTENBERG EBOOK[\s\S]+?\*{3}[\s\S]*$', '', self.text, count=1)
+
+        self.text = self.text.strip()
         return self.text
     
     def lowercase(self, text):
@@ -53,7 +57,7 @@ class Normalizer:
     
 
     def word_tokenize(self, sentence):
-        print(sentence.split())
+        return sentence.split()
     
     def save(self, sentences, filepath):
         with open(filepath, "w", encoding="utf-8") as f:
