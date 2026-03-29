@@ -3,7 +3,7 @@ import argparse
 import sys
 
 from dotenv import load_dotenv
-from src.data_prep import normalizer
+from src.inference.predictor import Predictor
 from src.model.ngram_model import NGramModel
 from src.data_prep.normalizer import Normalizer
 
@@ -55,7 +55,8 @@ args = parser.parse_args()
 
 VALID_STEPS = ["dataprep", "model", "inference", "all"]
 
-normalize = None # Initialize normalize variable to None for later use in model step
+normalize = None
+model = None
 
 if args.step not in VALID_STEPS:
     print(f"Invalid step: '{args.step}'")
@@ -69,7 +70,6 @@ else:
         sentences = normalize.sentence_tokenize()
         for i in range(len(sentences)):
             sentences[i] = normalize.normalize(sentences[i])
-            print(sentences[i])
 
         normalize.word_tokenize(sentences[0])
         normalize.save(sentences, TRAIN_TOKENS)
@@ -82,4 +82,26 @@ else:
         model.save_model(NGRAM_MODEL)
         model.save_vocab(VOCAB)
     if args.step == "inference" or args.step == "all":
-        print("Inference not implemented yet.")
+        if normalize is None:
+            normalize = Normalizer()
+        if model is None:
+            model = NGramModel(normalize.word_tokenize, unk_threshold=UNK_THRESHOLD, ngram_order=NGRAM_ORDER, smoothing=SMOOTHING)
+        model.load(NGRAM_MODEL, VOCAB)
+        predictor = Predictor(model, normalize)
+        print("\nN-Gram Language Model — Next Word Predictor")
+        print("Type 'quit' to exit\n")
+        while True:
+            try:
+                text = input("> ")
+                if text.strip().lower() == "quit":
+                    print("Goodbye.")
+                    break
+                # Skip prediction if input is empty or whitespace
+                if not text.strip():
+                    continue
+                predictions = predictor.predict_next(text, TOP_K)
+                print(f"Predictions: {predictions}\n")
+
+            except KeyboardInterrupt:
+                print("\nGoodbye.")
+                break

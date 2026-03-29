@@ -32,7 +32,7 @@ class NGramModel:
         model.save_vocab(VOCAB)
     """
 
-    def __init__(self, tokenizer, unk_threshold, ngram_order, smoothing=1, vocab=None):
+    def __init__(self, tokenizer, unk_threshold = 2, ngram_order = 3, smoothing=1, vocab=None):
         self.tokenizer     = tokenizer
         self.unk_threshold = unk_threshold
         self.ngram_order   = ngram_order
@@ -194,8 +194,6 @@ class NGramModel:
                 f.write(f'  "{gram}": {json.dumps(data)}{comma}\n')
             f.write("}\n")
 
-        print(f"Model saved to {model_path}")
-
 
     def save_vocab(self, vocab_path):
         """
@@ -208,8 +206,6 @@ class NGramModel:
 
         with open(vocab_path, "w", encoding="utf-8") as f:
             json.dump(vocab_list, f, indent=None)
-
-        print(f"Vocabulary saved to {vocab_path}")
 
 
     def load(self, model_path, vocab_path):
@@ -269,9 +265,6 @@ class NGramModel:
                     for word, prob in words.items():
                         ngram = tuple(prefix.split()) + (word,)
                         self.probs[n][ngram] = prob
-
-        print(f"Model loaded from {model_path}")
-        print(f"Vocabulary loaded from {vocab_path}")
 
 
     # Private helper methods to prevent duplication and keep main methods cleaner
