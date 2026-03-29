@@ -1,7 +1,20 @@
 from src.data_prep.normalizer import Normalizer
+from dotenv import load_dotenv
+import os
 
 
-TRAIN_RAW_DIR = r"C:\Users\hhassan4\Documents" + "\\"
+
+load_dotenv("config/.env")
+TRAIN_RAW_DIR = os.getenv("TRAIN_RAW_DIR")
+EVAL_RAW_DIR = os.getenv("EVAL_RAW_DIR")
+TRAIN_TOKENS = os.getenv("TRAIN_TOKENS")
+EVAL_TOKENS = os.getenv("EVAL_TOKENS")
+MODEL = os.getenv("MODEL")
+VOCAB = os.getenv("VOCAB")
+UNK_THRESHOLD = int(os.getenv("UNK_THRESHOLD"))
+TOP_K = int(os.getenv("TOP_K"))
+NGRAM_ORDER = int(os.getenv("NGRAM_ORDER"))
+
 
 normalize = Normalizer()
 normalize.load(TRAIN_RAW_DIR)
@@ -12,4 +25,4 @@ for i in range(len(sentences)):
     print(sentences[i])
 
 normalize.word_tokenize(sentences[0])
-normalize.save(sentences, r"C:\Users\hhassan4\Documents" + "\\sentences.txt")
+normalize.save(sentences, TRAIN_TOKENS)
