@@ -4,6 +4,30 @@ import re
 
 class Normalizer:
 
+    """
+    Handles loading, cleaning, and tokenizing raw text data.
+
+    Attributes:
+        text (str): The raw or processed text content.
+        tokens (str): The tokenized output.
+
+    Methods:
+        load(folder_path): Loads all .txt files from a folder.
+        strip_gutenberg(): Removes Project Gutenberg header and footer.
+        normalize(text): Runs all normalization steps in order.
+        sentence_tokenize(): Splits text into a list of sentences.
+        word_tokenize(sentence): Splits a sentence into a list of words.
+        save(sentences, filepath): Saves sentences to a .txt file.
+
+    Example:
+        normalizer = Normalizer()
+        normalizer.load("data/raw/train")
+        normalizer.strip_gutenberg()
+        sentences = normalizer.sentence_tokenize()
+        normalized = [normalizer.normalize(s) for s in sentences]
+        normalizer.save(normalized, "data/processed/train_tokens.txt")
+    """
+
     def __init__(self, text = "", tokens = ""):
         self.text = text
         self.tokens = tokens
