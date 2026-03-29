@@ -1,6 +1,7 @@
 from src.data_prep.normalizer import Normalizer
 from dotenv import load_dotenv
 import os
+import argparse
 
 
 
@@ -16,13 +17,18 @@ TOP_K = int(os.getenv("TOP_K"))
 NGRAM_ORDER = int(os.getenv("NGRAM_ORDER"))
 
 
-normalize = Normalizer()
-normalize.load(TRAIN_RAW_DIR)
-normalize.strip_gutenberg()
-sentences = normalize.sentence_tokenize()
-for i in range(len(sentences)):
-    sentences[i] = normalize.normalize(sentences[i])
-    print(sentences[i])
+parser = argparse.ArgumentParser()
+parser.add_argument("--step", type=str, help="Step to run")
+args = parser.parse_args()
 
-normalize.word_tokenize(sentences[0])
-normalize.save(sentences, TRAIN_TOKENS)
+if args.step == "dataprep":
+    normalize = Normalizer()
+    normalize.load(TRAIN_RAW_DIR)
+    normalize.strip_gutenberg()
+    sentences = normalize.sentence_tokenize()
+    for i in range(len(sentences)):
+        sentences[i] = normalize.normalize(sentences[i])
+        print(sentences[i])
+
+    normalize.word_tokenize(sentences[0])
+    normalize.save(sentences, TRAIN_TOKENS)
