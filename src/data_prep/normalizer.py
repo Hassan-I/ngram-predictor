@@ -86,4 +86,3 @@ class Normalizer:
     def save(self, sentences, filepath):
         with open(filepath, "w", encoding="utf-8") as f:
             f.write("\n".join(sentences))
-        print(f"Sentences saved to {filepath}")
