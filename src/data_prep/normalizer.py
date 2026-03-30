@@ -1,3 +1,4 @@
+import unicodedata
 import os
 import string
 import re
@@ -38,27 +39,31 @@ class Normalizer:
                 file_path = os.path.join(folder_path, file_name)
                 try:
                     with open(file_path, 'r', encoding='utf-8') as file:
-                        self.text = self.text + file.read()
+                        raw_file = file.read()
+                        self.text = self.text + self.strip_gutenberg(raw_file) + "\n"
                 except Exception as e:
                     print(f"Error reading {file_path}: {e}")
         return self.text
         
 
-    def strip_gutenberg(self):
+    def strip_gutenberg(self, input_text=""):
         # Remove everything before and including *** START OF ... ***
-        self.text = re.sub(r'^[\s\S]+?\*{3} START OF THE PROJECT GUTENBERG EBOOK[\s\S]+?\*{3}', '', self.text, count=1)
+        input_text = re.sub(r'^[\s\S]+?\*{3} START OF THE PROJECT GUTENBERG EBOOK[\s\S]+?\*{3}', '', input_text, count=1)
 
         # Remove everything from and including *** END OF ... ***
-        self.text = re.sub(r'\*{3} END OF THE PROJECT GUTENBERG EBOOK[\s\S]+?\*{3}[\s\S]*$', '', self.text, count=1)
+        input_text = re.sub(r'\*{3} END OF THE PROJECT GUTENBERG EBOOK[\s\S]+?\*{3}[\s\S]*$', '', input_text, count=1)
 
-        self.text = self.text.strip()
-        return self.text
+        return input_text.strip()
     
     def lowercase(self, text):
         return text.lower()
 
     def remove_punctuation(self, text):
-        return text.translate(str.maketrans("", "", string.punctuation))
+        custom_punctuation = string.punctuation.replace("'", "")
+        pattern = f"[{re.escape(custom_punctuation)}]"
+        text = re.sub(pattern, " ", text)
+        text = unicodedata.normalize('NFKD', text).encode('ascii', 'ignore').decode('ascii')
+        return text
 
     def remove_numbers(self, text):
         return text.translate(str.maketrans("", "", string.digits))
@@ -67,18 +72,22 @@ class Normalizer:
         return " ".join(text.split())
 
     def normalize(self, text):
+        text = re.sub(r"(\w+)('s|'m|'re|'ve|'d|'ll|'t)(?=[^a-zA-Z]|$)", r"\1 \2", text)
+        text = re.sub(r"(\w+s)(')(?=[^a-zA-Z]|$)", r"\1 \2", text)
         text = self.lowercase(text)
         text = self.remove_punctuation(text)
         text = self.remove_numbers(text)
         text = self.remove_whitespace(text)
+        text = re.sub(r"(^|\s)'(?!(s|m|re|ve|d|ll|t)\b)(\w+)", r"\1\3", text)
+        text = re.sub(r"\s'(?!(s|m|re|ve|d|ll|t)\b)", r"", text)
+        text = text.strip(" '")
         return text
         
 
     def sentence_tokenize(self):
-        sentences = re.split(r'(?<=[.!?]) +', self.text)
-        sentences = [sentence.strip() for sentence in sentences if sentence.strip()]
-        return sentences
-    
+        sentences = re.split(r'(?<=[.!?])\s+', self.text)
+        return [s.strip() for s in sentences if s.strip()]
+
 
     def word_tokenize(self, sentence):
         return sentence.split()

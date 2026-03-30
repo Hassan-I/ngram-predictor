@@ -6,14 +6,16 @@ from dotenv import load_dotenv
 from src.inference.predictor import Predictor
 from src.model.ngram_model import NGramModel
 from src.data_prep.normalizer import Normalizer
+from src.ui.app import PredictorUI
 
 
 # Load .env file
-if not os.path.exists("config/.env"):
-    print("Error: config/.env file not found")
+CONFIG_PATH = "config/.env"
+if not os.path.exists(CONFIG_PATH):
+    print(f"Folder not found: {CONFIG_PATH}. Check the path")
     sys.exit(1)
 
-load_dotenv("config/.env")
+load_dotenv(CONFIG_PATH)
 
 # Required variables
 required_vars = [
@@ -50,10 +52,10 @@ except ValueError as e:
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--step", type=str, help="Step to run")
+parser.add_argument("--step", type=str, default="gui", help="Step to run")
 args = parser.parse_args()
 
-VALID_STEPS = ["dataprep", "model", "inference", "all"]
+VALID_STEPS = ["dataprep", "model", "inference", "all", "gui"]
 
 normalize = None
 model = None
@@ -66,12 +68,11 @@ else:
     if args.step == "dataprep" or args.step == "all":
         normalize = Normalizer()
         normalize.load(TRAIN_RAW_DIR)
-        normalize.strip_gutenberg()
+        #print(normalize.text)
         sentences = normalize.sentence_tokenize()
+        #print(sentences)
         for i in range(len(sentences)):
             sentences[i] = normalize.normalize(sentences[i])
-
-        normalize.word_tokenize(sentences[0])
         normalize.save(sentences, TRAIN_TOKENS)
     if args.step == "model" or args.step == "all":
         if normalize is None:
@@ -81,7 +82,7 @@ else:
         model.build_counts_and_probabilities(TRAIN_TOKENS)
         model.save_model(NGRAM_MODEL)
         model.save_vocab(VOCAB)
-    if args.step == "inference" or args.step == "all":
+    if args.step == "inference" or args.step == "all" or args.step == "gui":
         if normalize is None:
             normalize = Normalizer()
         if model is None:
@@ -90,6 +91,9 @@ else:
         predictor = Predictor(model, normalize)
         print("\nN-Gram Language Model — Next Word Predictor")
         print("Type 'quit' to exit\n")
+
+        ui = PredictorUI(predictor, TOP_K)
+        ui.run()
         while True:
             try:
                 text = input("> ")
