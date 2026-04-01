@@ -78,6 +78,10 @@ class PredictorUI:
         
         text = self.render_input()
         
+        if text.strip().lower() == "quit":
+            print("Goodbye.")
+            st.stop()
+
         if text.strip():
             with st.spinner("Analyzing context..."):
                 predictions = self.predictor.predict_next(text, self.top_k)
