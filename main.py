@@ -1,12 +1,20 @@
 import os
 import argparse
 import sys
+import logging
+
 
 from dotenv import load_dotenv
 from src.inference.predictor import Predictor
 from src.model.ngram_model import NGramModel
 from src.data_prep.normalizer import Normalizer
 from src.ui.app import PredictorUI
+from streamlit.runtime import get_instance
+from streamlit.runtime.scriptrunner import get_script_run_ctx
+
+
+logging.getLogger("streamlit.runtime.scriptrunner_utils.script_run_context").setLevel(logging.ERROR)
+logging.getLogger("streamlit").setLevel(logging.ERROR)
 
 
 # Load .env file
@@ -91,21 +99,24 @@ else:
         predictor = Predictor(model, normalize)
         print("\nN-Gram Language Model — Next Word Predictor")
         print("Type 'quit' to exit\n")
+        if get_script_run_ctx() is not None:
+            # If we're running inside Streamlit, we want to launch the UI directly
+            predictor = Predictor(model, normalize)
+            ui = PredictorUI(predictor, TOP_K)
+            ui.run()
+        else:
+            while True:
+                try:
+                    text = input("> ")
+                    if text.strip().lower() == "quit":
+                        print("Goodbye.")
+                        break
+                    # Skip prediction if input is empty or whitespace
+                    if not text.strip():
+                        continue
+                    predictions = predictor.predict_next(text, TOP_K)
+                    print(f"Predictions: {predictions}\n")
 
-        ui = PredictorUI(predictor, TOP_K)
-        ui.run()
-        while True:
-            try:
-                text = input("> ")
-                if text.strip().lower() == "quit":
-                    print("Goodbye.")
+                except KeyboardInterrupt:
+                    print("\nGoodbye.")
                     break
-                # Skip prediction if input is empty or whitespace
-                if not text.strip():
-                    continue
-                predictions = predictor.predict_next(text, TOP_K)
-                print(f"Predictions: {predictions}\n")
-
-            except KeyboardInterrupt:
-                print("\nGoodbye.")
-                break
