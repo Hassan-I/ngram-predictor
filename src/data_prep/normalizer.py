@@ -2,6 +2,7 @@ import unicodedata
 import os
 import string
 import re
+import sys
 
 class Normalizer:
 
@@ -50,15 +51,25 @@ class Normalizer:
         Returns:
             str: The accumulated text content from all successfully read and cleaned files.
         """
-        for file_name in os.listdir(folder_path):
-            if file_name.endswith('.txt'):
-                file_path = os.path.join(folder_path, file_name)
-                try:
-                    with open(file_path, 'r', encoding='utf-8') as file:
-                        raw_file = file.read()
-                        self.text = self.text + self.strip_gutenberg(raw_file) + "\n"
-                except Exception as e:
-                    print(f"Error reading {file_path}: {e}")
+        try:
+            # Move the directory listing INSIDE the try block
+            files = os.listdir(folder_path)
+            
+            for file_name in files:
+                if file_name.endswith('.txt'):
+                    file_path = os.path.join(folder_path, file_name)
+                    try:
+                        with open(file_path, 'r', encoding='utf-8') as file:
+                            raw_file = file.read()
+                            self.text = self.text + self.strip_gutenberg(raw_file) + "\n"
+                    except Exception as e:
+                        print(f"Error reading {file_path}: {e}")
+
+        except FileNotFoundError:
+            # Now this will correctly catch the error when the folder is missing
+            print(f"Folder not found: {folder_path}. Check TRAIN_RAW_DIR in config/.env.")
+            sys.exit(1)
+
         return self.text
         
 
