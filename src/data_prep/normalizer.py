@@ -30,10 +30,26 @@ class Normalizer:
     """
 
     def __init__(self, text = "", tokens = ""):
+        """
+        Initializes the Normalizer with optional text and tokens.
+
+        Args:
+            text (str): Initial raw or processed text content. Defaults to "".
+            tokens (str): Initial tokenized output. Defaults to "".
+        """
         self.text = text
         self.tokens = tokens
 
     def load(self, folder_path):
+        """
+        Reads all text files from a directory, cleans them, and appends them to the instance text.
+
+        Args:
+            folder_path (str): The path to the directory containing .txt files.
+
+        Returns:
+            str: The accumulated text content from all successfully read and cleaned files.
+        """
         for file_name in os.listdir(folder_path):
             if file_name.endswith('.txt'):
                 file_path = os.path.join(folder_path, file_name)
@@ -47,6 +63,15 @@ class Normalizer:
         
 
     def strip_gutenberg(self, input_text=""):
+        """
+        Removes the Project Gutenberg standard header and footer from the input text.
+
+        Args:
+            input_text (str): The raw text content of a Project Gutenberg ebook.
+
+        Returns:
+            str: The cleaned text containing only the body of the book.
+        """
         # Remove everything before and including *** START OF ... ***
         input_text = re.sub(r'^[\s\S]+?\*{3} START OF THE PROJECT GUTENBERG EBOOK[\s\S]+?\*{3}', '', input_text, count=1)
 
@@ -56,9 +81,27 @@ class Normalizer:
         return input_text.strip()
     
     def lowercase(self, text):
+        """
+        Converts the provided text string to lowercase.
+
+        Args:
+            text (str): The string to be converted.
+
+        Returns:
+            str: The input text in all lowercase letters.
+        """
         return text.lower()
 
     def remove_punctuation(self, text):
+        """
+        Removes punctuation from the text while preserving apostrophes and normalizing characters.
+
+        Args:
+            text (str): The string from which punctuation and non-ASCII characters should be removed.
+
+        Returns:
+            str: The cleaned text containing only alphanumeric characters, spaces, and apostrophes.
+        """
         custom_punctuation = string.punctuation.replace("'", "")
         pattern = f"[{re.escape(custom_punctuation)}]"
         text = re.sub(pattern, " ", text)
@@ -66,12 +109,39 @@ class Normalizer:
         return text
 
     def remove_numbers(self, text):
+        """
+        Removes all digits from the text.
+
+        Args:
+            text (str): The string from which digits should be removed.
+
+        Returns:
+            str: The text with all digits removed.
+        """
         return text.translate(str.maketrans("", "", string.digits))
 
     def remove_whitespace(self, text):
+        """
+        Removes leading and trailing whitespace from the text.
+
+        Args:
+            text (str): The string from which whitespace should be removed.
+
+        Returns:
+            str: The text with leading and trailing whitespace removed.
+        """
         return " ".join(text.split())
 
     def normalize(self, text):
+        """
+        Executes a sequence of cleaning steps to standardize the text for modeling.
+
+        Args:
+            text (str): The raw sentence or string to be normalized.
+
+        Returns:
+            str: The fully processed and cleaned text.
+        """
         text = re.sub(r"(\w+)('s|'m|'re|'ve|'d|'ll|'t)(?=[^a-zA-Z]|$)", r"\1 \2", text)
         text = re.sub(r"(\w+s)(')(?=[^a-zA-Z]|$)", r"\1 \2", text)
         text = self.lowercase(text)
@@ -85,13 +155,35 @@ class Normalizer:
         
 
     def sentence_tokenize(self):
+        """
+        Splits the accumulated text into a list of individual sentences.
+
+        Returns:
+            list: A list of strings, where each string is a single sentence stripped of extra whitespace.
+        """
         sentences = re.split(r'(?<=[.!?])\s+', self.text)
         return [s.strip() for s in sentences if s.strip()]
 
 
     def word_tokenize(self, sentence):
+        """
+        Splits a single sentence into a list of individual words (tokens).
+
+        Args:
+            sentence (str): The sentence string to be tokenized.
+
+        Returns:
+            list: A list of words derived from the sentence.
+        """
         return sentence.split()
     
     def save(self, sentences, filepath):
+        """
+        Saves a list of processed sentences to a text file, with each sentence on a new line.
+
+        Args:
+            sentences (list): A list of strings representing the normalized sentences.
+            filepath (str): The destination path where the file should be saved.
+        """
         with open(filepath, "w", encoding="utf-8") as f:
             f.write("\n".join(sentences))
