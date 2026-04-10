@@ -33,6 +33,16 @@ class NGramModel:
     """
 
     def __init__(self, tokenizer, unk_threshold = 2, ngram_order = 3, smoothing=1, vocab=None):
+        """
+        Initializes the NGramModel with configuration parameters and empty data structures.
+
+        Args:
+            tokenizer (object): The tokenizer instance used for processing text.
+            unk_threshold (int): The minimum frequency a word must have to remain in the vocabulary. Defaults to 2.
+            ngram_order (int): The highest order of n-grams to calculate (e.g., 3 for trigrams). Defaults to 3.
+            smoothing (int): The smoothing technique to apply; 0 for MLE, 1 for Laplace. Defaults to 1.
+            vocab (dict, optional): A pre-existing vocabulary dictionary. Defaults to None.
+        """
         self.tokenizer     = tokenizer
         self.unk_threshold = unk_threshold
         self.ngram_order   = ngram_order
