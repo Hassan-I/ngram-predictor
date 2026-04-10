@@ -55,21 +55,32 @@ class Predictor:
 
         Returns:
             list: Top-k predicted next words sorted by probability (highest first).
-                Returns empty list if no predictions found.
+                Returns empty list if no predictions found or error occurs.
         """
-        # Step 1 — Normalize and extract context
-        context = self.normalize(text)
+        try:
+            # Check for empty or whitespace-only strings
+            if not text or not text.strip():
+                raise ValueError("Input text is empty. Please type at least one word.")
 
-        # Step 2 — Replace OOV words with <UNK>
-        context = self.map_oov(context)
+            # Step 1 — Normalize and extract context
+            context = self.normalize(text)
 
-        # Step 3 — Backoff lookup
-        candidates = self.model.lookup(context)
+            # Step 2 — Replace OOV words with <UNK>
+            context = self.map_oov(context)
 
-        # Step 4 — Sort by probability and return top-k
-        if not candidates:
+            # Step 3 — Backoff lookup
+            candidates = self.model.lookup(context)
+
+            # Step 4 — Sort by probability and return top-k
+            if not candidates:
+                return []
+
+            # Sort by probability value in descending order
+            sorted_candidates = sorted(candidates.items(), key=lambda x: x[1], reverse=True)
+
+            return [word for word, prob in sorted_candidates[:k]]
+
+        except ValueError as e:
+            # Catch the specific empty string error
+            print(e)
             return []
-
-        sorted_candidates = sorted(candidates.items(), key=lambda x: x[1], reverse=True)
-
-        return [word for word, prob in sorted_candidates[:k]]

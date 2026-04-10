@@ -220,13 +220,13 @@ class NGramModel:
 
     def load(self, model_path, vocab_path):
         """
-        Loads model.json and vocab.json into the instance.
+        Loads and reconstructs the probability tables and vocabulary from JSON files.
 
         Args:
             model_path (str): Path to the model JSON file.
             vocab_path (str): Path to the vocabulary JSON file.
         """
-        # Load vocab
+        # Load vocabulary and reconstruct the vocab dictionary
         try:
             with open(vocab_path, "r", encoding="utf-8") as f:
                 content = f.read()
@@ -244,7 +244,7 @@ class NGramModel:
             print(f"Error: vocab file is not valid JSON: {vocab_path}")
             sys.exit(1)
 
-        # Load model
+        # Load the probability data from the model JSON file
         try:
             with open(model_path, "r", encoding="utf-8") as f:
                 content = f.read()
@@ -254,23 +254,28 @@ class NGramModel:
                 serializable_probs = json.loads(content)
 
         except FileNotFoundError:
-            print(f"Error: model file not found: {model_path}")
+            # Custom error message for missing model.json
+            print(f"Error: model.json not found. Run the Model module first: {model_path}")
             sys.exit(1)
 
         except json.JSONDecodeError:
-            print(f"Error: model file is not valid JSON: {model_path}")
+            # Custom error message for malformed model.json
+            print(f"Error: model.json is malformed. Re-run the Model module: {model_path}")
             sys.exit(1)
 
-        # Convert back to original format
+        # Reconstruct the self.probs dictionary by converting string keys back into tuples
         self.probs = {}
         for gram, data in serializable_probs.items():
+            # Extract the n-order from the key (e.g., '3gram' -> 3)
             n = int(gram.replace("gram", ""))
             self.probs[n] = {}
 
             if n == 1:
+                # Unigrams are stored as single-word tuples
                 for word, prob in data.items():
                     self.probs[n][(word,)] = prob
             else:
+                # Higher-order n-grams: combine the prefix and current word into a tuple
                 for prefix, words in data.items():
                     for word, prob in words.items():
                         ngram = tuple(prefix.split()) + (word,)

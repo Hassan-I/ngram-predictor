@@ -37,7 +37,7 @@ try:
         if os.getenv(var) is None:
             raise KeyError(var)
 except KeyError as e:
-    print(f"Missing variable in config/.env: {e}")
+    print(f"Missing config variable: {str(e)}. Check config/.env")
     sys.exit(1)
 
 # Load variables
@@ -111,11 +111,9 @@ else:
                     if text.strip().lower() == "quit":
                         print("Goodbye.")
                         break
-                    # Skip prediction if input is empty or whitespace
-                    if not text.strip():
-                        continue
                     predictions = predictor.predict_next(text, TOP_K)
-                    print(f"Predictions: {predictions}\n")
+                    if predictions:
+                        print(f"Predictions: {predictions}\n")
 
                 except KeyboardInterrupt:
                     print("\nGoodbye.")
