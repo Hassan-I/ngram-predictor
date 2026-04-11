@@ -1,4 +1,6 @@
+import time
 import streamlit as st
+import os
 
 class PredictorUI:
     def __init__(self, predictor, top_k):
@@ -79,8 +81,30 @@ class PredictorUI:
         text = self.render_input()
         
         if text.strip().lower() == "quit":
-            print("Goodbye.")
-            st.stop()
+            #print("Goodbye.")
+            #st.stop()
+            #sys.exit(0)
+            if text.strip().lower() == "quit":
+                st.write("Goodbye! Closing the application...")
+                
+                # JavaScript to attempt to close the tab
+                # Note: This usually only works if the tab was opened via a script 
+                # (like 'streamlit hello').
+                st.components.v1.html(
+                    """
+                    <script>
+                        window.parent.window.close();
+                        window.close();
+                    </script>
+                    """,
+                    height=0,
+                )
+                
+                # Fallback: Tell the user it's safe to leave
+                st.info("The tab could not be closed automatically due to browser security. You can now safely close this tab manually.")
+                print("Goodbye.")
+                time.sleep(2)  # Give the user a moment to read the message
+                os._exit(0)
 
         if text.strip():
             with st.spinner("Analyzing context..."):
