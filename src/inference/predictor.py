@@ -1,4 +1,27 @@
+import logging
+logger = logging.getLogger(__name__)
+
+
 class Predictor:
+    """
+    Orchestrates the prediction pipeline by coordinating normalization, OOV handling, and model lookups.
+
+    Attributes:
+        model (NGramModel): Pre-loaded N-Gram model instance used for lookups.
+        normalizer (Normalizer): Pre-loaded Normalizer instance used for cleaning and tokenization.
+
+    Methods:
+        normalize(text): Cleans input and extracts the relevant context based on model order.
+        map_oov(context): Replaces words not in vocabulary with <UNK> and logs warnings.
+        predict_next(text, k): Executes the full pipeline to return the top-k word predictions.
+
+    Example:
+        predictor = Predictor(model, normalizer)
+        top_words = predictor.predict_next("The quick brown", k=3)
+        print(f"Top predictions: {top_words}")
+    """
+
+    
     def __init__(self, model, normalizer):
         """
         Accepts a pre-loaded NGramModel and Normalizer instance.
@@ -43,7 +66,17 @@ class Predictor:
         Returns:
             list: Context with OOV words replaced by <UNK>.
         """
-        return [w if w in self.model.vocab else "<​UNK>" for w in context]
+        processed_context = []
+        
+        for w in context:
+            if w in self.model.vocab:
+                processed_context.append(w)
+            else:
+                # WARNING — log OOV words encountered at inference time
+                logging.warning(f"OOV word encountered: '{w}'")
+                processed_context.append("<UNK>")
+        
+        return processed_context
 
     def predict_next(self, text, k):
         """

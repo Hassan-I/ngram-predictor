@@ -1,5 +1,8 @@
 import json
+import os
 import sys
+import logging
+logger = logging.getLogger(__name__)
 
 
 class NGramModel:
@@ -60,6 +63,9 @@ class NGramModel:
         Args:
             token_file (str): Path to the token file (one sentence per line).
         """
+
+        logging.info("Building vocabulary from token file...")
+
         # Read all sentences
         sentences = self._read_sentences(token_file)
 
@@ -80,6 +86,8 @@ class NGramModel:
         if "<UNK>" not in self.vocab:
             self.vocab["<UNK>>"] = 0
 
+        logging.info(f"Vocabulary building complete. Total unique words (Vocab Size): {len(self.vocab)}")
+
 
 
     def build_counts_and_probabilities(self, token_file):
@@ -90,6 +98,9 @@ class NGramModel:
         Args:
             token_file (str): Path to the token file (one sentence per line).
         """
+
+        logging.info("Starting n-gram counting and probability computation...")
+
         # Initialize counts and probabilities for each order
         self.counts = {n: {} for n in range(1, self.ngram_order + 1)}
         self.probs  = {n: {} for n in range(1, self.ngram_order + 1)}
@@ -107,9 +118,19 @@ class NGramModel:
                     ngram = tuple(words[i:i + n])
                     self.counts[n][ngram] = self.counts[n].get(ngram, 0) + 1
 
+
+        # --- INFO: KEY STATS ---
+        # Requirement: log total tokens
+        total_tokens = sum(self.counts[1].values())
+        logging.info(f"Counting complete. Total tokens processed: {total_tokens}")
+
+
         # Compute probabilities
         for n in range(1, self.ngram_order + 1):
             for ngram, count in self.counts[n].items():
+
+                # DEBUG — log every n-gram count
+                logging.debug(f"{n}-gram: {ngram} | count: {count}")
                 if n == 1:
                     total = sum(self.counts[1].values())
                     if self.smoothing == "laplace":
@@ -124,6 +145,8 @@ class NGramModel:
                     else:
                         #else 0 if prefix_count is 0 to avoid division by zero
                         self.probs[n][ngram] = count / prefix_count if prefix_count > 0 else 0
+
+        logging.info("N-gram probabilities computed successfully.")
 
     def lookup(self, context):
         """
@@ -143,6 +166,10 @@ class NGramModel:
 
             # Take the last n-1 words as the prefix
             prefix = tuple(context[-(n - 1):]) if n > 1 else ()
+
+
+            # DEBUG — log every backoff step
+            logging.debug(f"Backoff lookup: testing {n}-gram order with prefix: {prefix}")
 
             # Find all ngrams that start with this prefix
             result = {}
@@ -196,6 +223,12 @@ class NGramModel:
                         reverse=True
                     ))
 
+        directory = os.path.dirname(model_path)
+        if directory and not os.path.exists(directory):
+            os.makedirs(directory)
+            # INFO — log that we created a new folder
+            logging.info(f"Created missing directory: {directory}")
+
         with open(model_path, "w", encoding="utf-8") as f:
             f.write("{\n")
             items = list(serializable_probs.items())
@@ -213,7 +246,12 @@ class NGramModel:
             vocab_path (str): Path to save the vocabulary JSON file.
         """
         vocab_list = list(self.vocab.keys())
-
+        directory = os.path.dirname(vocab_path)
+        if directory and not os.path.exists(directory):
+            os.makedirs(directory)
+            # INFO — log that we created a new folder
+            logging.info(f"Created missing directory: {directory}")
+    
         with open(vocab_path, "w", encoding="utf-8") as f:
             json.dump(vocab_list, f, indent=None)
 
@@ -255,12 +293,12 @@ class NGramModel:
 
         except FileNotFoundError:
             # Custom error message for missing model.json
-            print(f"Error: model.json not found. Run the Model module first: {model_path}")
+            logging.error(f"Error: model.json not found. Run the Model module first: {model_path}")
             sys.exit(1)
 
         except json.JSONDecodeError:
             # Custom error message for malformed model.json
-            print(f"Error: model.json is malformed. Re-run the Model module: {model_path}")
+            logging.error(f"Error: model.json is malformed. Re-run the Model module: {model_path}")
             sys.exit(1)
 
         # Reconstruct the self.probs dictionary by converting string keys back into tuples

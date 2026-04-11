@@ -3,6 +3,9 @@ import os
 import string
 import re
 import sys
+import logging
+logger = logging.getLogger(__name__)
+
 
 class Normalizer:
 
@@ -67,7 +70,7 @@ class Normalizer:
 
         except FileNotFoundError:
             # Now this will correctly catch the error when the folder is missing
-            print(f"Folder not found: {folder_path}. Check TRAIN_RAW_DIR in config/.env.")
+            logging.error(f"Folder not found: {folder_path}. Check TRAIN_RAW_DIR in config/.env.")
             sys.exit(1)
 
         return self.text

@@ -13,10 +13,6 @@ from streamlit.runtime import get_instance
 from streamlit.runtime.scriptrunner import get_script_run_ctx
 
 
-logging.getLogger("streamlit.runtime.scriptrunner_utils.script_run_context").setLevel(logging.ERROR)
-logging.getLogger("streamlit").setLevel(logging.ERROR)
-
-
 # Load .env file
 CONFIG_PATH = "config/.env"
 if not os.path.exists(CONFIG_PATH):
@@ -24,6 +20,16 @@ if not os.path.exists(CONFIG_PATH):
     sys.exit(1)
 
 load_dotenv(CONFIG_PATH)
+
+
+logging.basicConfig(
+    level=os.getenv("LOG_LEVEL", "INFO").upper(),
+    format="%(asctime)s [%(levelname)s] %(message)s"
+)
+
+logger = logging.getLogger(__name__)
+logging.getLogger("streamlit.runtime.scriptrunner_utils.script_run_context").setLevel(logging.ERROR)
+logging.getLogger("streamlit").setLevel(logging.ERROR)
 
 # Required variables
 required_vars = [
@@ -37,7 +43,7 @@ try:
         if os.getenv(var) is None:
             raise KeyError(var)
 except KeyError as e:
-    print(f"Missing config variable: {str(e)}. Check config/.env")
+    logging.error(f"Missing config variable: {str(e)}. Check config/.env")
     sys.exit(1)
 
 # Load variables
@@ -74,6 +80,7 @@ if args.step not in VALID_STEPS:
     sys.exit(1)
 else:
     if args.step == "dataprep" or args.step == "all":
+        logging.info("--- Starting Data Preparation Stage ---")
         normalize = Normalizer()
         normalize.load(TRAIN_RAW_DIR)
         #print(normalize.text)
@@ -82,7 +89,9 @@ else:
         for i in range(len(sentences)):
             sentences[i] = normalize.normalize(sentences[i])
         normalize.save(sentences, TRAIN_TOKENS)
+        logging.info("--- Data Preparation completed ---")
     if args.step == "model" or args.step == "all":
+        logging.info("--- Starting Model Training Stage ---")
         if normalize is None:
             normalize = Normalizer()
         model = NGramModel(normalize.word_tokenize, unk_threshold=UNK_THRESHOLD, ngram_order=NGRAM_ORDER, smoothing=SMOOTHING)
@@ -90,7 +99,9 @@ else:
         model.build_counts_and_probabilities(TRAIN_TOKENS)
         model.save_model(NGRAM_MODEL)
         model.save_vocab(VOCAB)
+        logging.info("--- Model Training completed ---")
     if args.step == "inference" or args.step == "all" or args.step == "gui":
+        logging.info("--- Starting Inference Stage ---")
         if normalize is None:
             normalize = Normalizer()
         if model is None:
@@ -109,6 +120,7 @@ else:
                 try:
                     text = input("> ")
                     if text.strip().lower() == "quit":
+                        logging.info("Ending Inference Stage")
                         print("Goodbye.")
                         break
                     predictions = predictor.predict_next(text, TOP_K)
@@ -116,5 +128,6 @@ else:
                         print(f"Predictions: {predictions}\n")
 
                 except KeyboardInterrupt:
+                    logging.info("Interrupted by user")
                     print("\nGoodbye.")
                     break
