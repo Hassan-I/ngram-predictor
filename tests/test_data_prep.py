@@ -1,4 +1,3 @@
-import pytest
 from src.data_prep.normalizer import Normalizer
 
 def test_normalize_lowercases():
