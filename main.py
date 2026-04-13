@@ -34,7 +34,7 @@ logging.getLogger("streamlit").setLevel(logging.ERROR)
 # Required variables
 required_vars = [
     "TRAIN_RAW_DIR", "EVAL_RAW_DIR", "TRAIN_TOKENS", "EVAL_TOKENS",
-    "MODEL", "VOCAB", "UNK_THRESHOLD", "TOP_K", "NGRAM_ORDER", "SMOOTHING"
+    "MODEL", "VOCAB", "UNK_THRESHOLD", "TOP_K", "NGRAM_ORDER"
 ]
 
 # Check if any variable is missing
@@ -58,7 +58,7 @@ try:
     UNK_THRESHOLD = int(os.getenv("UNK_THRESHOLD"))
     TOP_K = int(os.getenv("TOP_K"))
     NGRAM_ORDER = int(os.getenv("NGRAM_ORDER"))
-    SMOOTHING = int(os.getenv("SMOOTHING"))
+    SMOOTHING = int(os.getenv("SMOOTHING", "0"))
 
 except ValueError as e:
     print(f"Error: UNK_THRESHOLD, TOP_K, and NGRAM_ORDER must be integers - {e}")
