@@ -199,5 +199,11 @@ class Normalizer:
             sentences (list): A list of strings representing the normalized sentences.
             filepath (str): The destination path where the file should be saved.
         """
+
+        directory = os.path.dirname(filepath)
+        if directory and not os.path.exists(directory):
+            os.makedirs(directory)
+            # INFO — log that we created a new folder
+            logging.info(f"Created missing directory: {directory}")
         with open(filepath, "w", encoding="utf-8") as f:
             f.write("\n".join(sentences))
