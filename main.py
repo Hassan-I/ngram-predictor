@@ -53,7 +53,7 @@ try:
     TRAIN_TOKENS = os.getenv("TRAIN_TOKENS")
     EVAL_TOKENS = os.getenv("EVAL_TOKENS")
     #Changed MODEL to NGRAM_MODEL to prevent conficlt with env variable called MODEL in My Machine
-    NGRAM_MODEL = os.getenv("NGRAM_MODEL") # MODEL variable name may work with other machines
+    MODEL = os.getenv("MODEL") # MODEL variable name may work with other machines
     VOCAB = os.getenv("VOCAB")
     UNK_THRESHOLD = int(os.getenv("UNK_THRESHOLD"))
     TOP_K = int(os.getenv("TOP_K"))
@@ -97,7 +97,7 @@ else:
         model = NGramModel(normalize.word_tokenize, unk_threshold=UNK_THRESHOLD, ngram_order=NGRAM_ORDER, smoothing=SMOOTHING)
         model.build_vocab(TRAIN_TOKENS)
         model.build_counts_and_probabilities(TRAIN_TOKENS)
-        model.save_model(NGRAM_MODEL)
+        model.save_model(MODEL)
         model.save_vocab(VOCAB)
         logging.info("--- Model Training completed ---")
     if args.step == "inference" or args.step == "all" or args.step == "gui":
@@ -106,7 +106,7 @@ else:
             normalize = Normalizer()
         if model is None:
             model = NGramModel(normalize.word_tokenize, unk_threshold=UNK_THRESHOLD, ngram_order=NGRAM_ORDER, smoothing=SMOOTHING)
-        model.load(NGRAM_MODEL, VOCAB)
+        model.load(MODEL, VOCAB)
         predictor = Predictor(model, normalize)
         print("\nN-Gram Language Model — Next Word Predictor")
         print("Type 'quit' to exit\n")
